@@ -9,17 +9,18 @@ REST API (.NET 8) para gestión de usuarios con registro (OTP + Cognito), Clean 
 ## Documentación por milestone
 
 - **[Milestone 01 — Setup](docs/MILESTONE-01-SETUP.md)** — Referencia detallada del primer milestone (estructura, .env, DI, tests) para uso en curso.
+- **[Milestone 02 — Domain](docs/MILESTONE-02-DOMAIN.md)** — Implementación completa del dominio (entidades, value objects, domain events, factory, repositories interfaces, specifications).
 
-## Estructura (milestone 01-setup)
+## Estructura (milestone 02-domain)
 
 ```
 src/
-  UserManagement.Domain/
-  UserManagement.Application/
-  UserManagement.Infrastructure/
-  UserManagement.API/
+  UserManagement.Domain/          # ✅ Domain completo (User, Email, UserOtp, Events, Factory, Repos, Specs)
+  UserManagement.Application/      # Próximo: CQRS, MediatR, Commands/Queries
+  UserManagement.Infrastructure/  # Próximo: EF Core, Repositorios, Cognito, SES
+  UserManagement.API/              # Próximo: Controllers, DTOs, Middleware
 tests/
-  UserManagement.UnitTests/
+  UserManagement.UnitTests/        # ✅ Tests del dominio (UserFactory, Email, Specifications)
   UserManagement.IntegrationTests/
 ```
 
@@ -46,12 +47,12 @@ dotnet run --project src/UserManagement.API
   - `HealthCheckTests` (FluentAssertions) valida que la API responde en la raíz (`/`) y en `/health`.  
   - `ArquitectureTests` usa **NetArchTest.Rules** para garantizar las reglas de arquitectura entre proyectos (`Domain`, `Application`, `Infrastructure`, `API`) basadas en los tipos `AssemblyReference` de cada capa.
 
-## Verificación milestone 01-setup
+## Verificación milestone 02-domain
 
 - La solución compila: `dotnet build`
-- Unit tests: `dotnet test tests/UserManagement.UnitTests` (smoke tests con FluentAssertions + carga del assembly Domain vía AssemblyReference)
-- Integration tests: `dotnet test tests/UserManagement.IntegrationTests` (health checks + reglas de arquitectura con NetArchTest)
-- API arranca: `dotnet run --project src/UserManagement.API` y abrir https://localhost:7027/ o http://localhost:5042/ (redirige a `/swagger`) y `/health` para el health check.
+- Domain compila: `dotnet build src/UserManagement.Domain`
+- Unit tests del dominio: `dotnet test tests/UserManagement.UnitTests --filter "FullyQualifiedName~Domain"` (UserFactory, Email, User, UserOtp, Specifications)
+- Todos los tests: `dotnet test`
 
 ## Configuración (.env)
 
