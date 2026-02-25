@@ -10,11 +10,11 @@ namespace UserManagement.IntegrationTests;
 /// <summary>
 /// Milestone 01-setup: verify API starts and responds (health and root endpoint).
 /// </summary>
-public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public HealthCheckTests(WebApplicationFactory<Program> factory)
+    public HealthCheckTests(CustomWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
