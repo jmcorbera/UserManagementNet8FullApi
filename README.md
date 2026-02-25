@@ -10,6 +10,7 @@ REST API (.NET 8) para gestión de usuarios con registro (OTP + Cognito), Clean 
 
 - **[Milestone 01 — Setup](docs/MILESTONE-01-SETUP.md)** — Referencia detallada del primer milestone (estructura, .env, DI, tests) para uso en curso.
 - **[Milestone 02 — Domain](docs/MILESTONE-02-DOMAIN.md)** — Implementación completa del dominio (entidades, value objects, domain events, factory, repositories interfaces, specifications).
+- **[Milestone 03 — Application Core](docs/MILESTONE-03-APPLICATION-CORE.md)** — Application Core con CQRS (MediatR), validación (FluentValidation + pipeline), Result pattern, feature flags, abstracciones y tests.
 
 ## Estructura (milestone 02-domain)
 
