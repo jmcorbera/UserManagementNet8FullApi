@@ -302,9 +302,8 @@ dotnet test
 En el milestone 04 (Infrastructure) se implementará:
 
 - Persistencia real (EF Core + repositorios).
-- Implementación de `ICognitoIdentityService`.
-- Implementación de `IEmailSender` (SES u otro proveedor).
-- Providers concretos de `IOtpGenerator` y `IDateTimeProvider`.
+- Providers concretos de`IDateTimeProvider`.
+- Integration tests con Testcontainers MySQL.
 
 ---
 
