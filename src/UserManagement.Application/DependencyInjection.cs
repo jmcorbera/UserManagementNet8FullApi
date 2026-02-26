@@ -6,8 +6,6 @@ using UserManagement.Application.Common.Abstractions;
 using UserManagement.Application.Common.Behaviors;
 using UserManagement.Application.Common.Options;
 using UserManagement.Application.Fakes.FakeInstances;
-using UserManagement.Domain.Repositories;
-
 
 namespace UserManagement.Application;
 
@@ -23,14 +21,9 @@ public static class DependencyInjection
 
         services.Configure<FeatureFlagsOptions>(configuration.GetSection(FeatureFlagsOptions.SectionName));
 
-        // fake instances for development
-        // Real implementation will be added later in infrastructure layer
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUserOtpRepository, UserOtpRepository>();
-        services.AddScoped<IEmailSender, EmailSender>();
-        services.AddScoped<IOtpGenerator, OtpGenerator>();
-        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-        services.AddScoped<ICognitoIdentityService, CognitoIdentityService>();
+        services.AddTransient<IEmailSender, EmailSender>();
+        services.AddTransient<IOtpGenerator, OtpGenerator>();
+        services.AddTransient<ICognitoIdentityService, CognitoIdentityService>();
 
         return services;
     }
