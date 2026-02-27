@@ -1,58 +1,59 @@
 # User Management API
 
-REST API (.NET 8) para gestión de usuarios con registro (OTP + Cognito), Clean Architecture y CQRS.
+REST API (.NET 8) for user management with registration (OTP + Cognito), Clean Architecture and CQRS.
 
-## Requisitos
+## Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
-## Documentación por milestone
+## Documentation by Milestone
 
-- **[Milestone 01 — Setup](docs/MILESTONE-01-SETUP.md)** — Referencia detallada del primer milestone (estructura, .env, DI, tests) para uso en curso.
-- **[Milestone 02 — Domain](docs/MILESTONE-02-DOMAIN.md)** — Implementación completa del dominio (entidades, value objects, domain events, factory, repositories interfaces, specifications).
-- **[Milestone 03 — Application Core](docs/MILESTONE-03-APPLICATION-CORE.md)** — Application Core con CQRS (MediatR), validación (FluentValidation + pipeline), Result pattern, feature flags, abstracciones y tests.
+- **[Milestone 01 — Setup](docs/MILESTONE-01-SETUP.md)** — Detailed reference for the first milestone (structure, .env, DI, tests) for course usage.
+- **[Milestone 02 — Domain](docs/MILESTONE-02-DOMAIN.md)** — Complete domain implementation (entities, value objects, domain events, factory, repository interfaces, specifications).
+- **[Milestone 03 — Application Core](docs/MILESTONE-03-APPLICATION-CORE.md)** — Application Core with CQRS (MediatR), validation (FluentValidation + pipeline), Result pattern, feature flags, abstractions and tests.
+- **[Milestone 04 — Infrastructure/Data](docs/MILESTONE-04-INFRASTRUCTURE-DATA.md)** — Persistence layer with EF Core and MySQL, concrete repositories, entity mappings, soft delete global filter, and integration tests with Testcontainers.
 
-## Build y tests
+## Build and Tests
 
 ```bash
-# Restaurar y compilar
+# Restore and build
 dotnet restore
 dotnet build
 
-# Ejecutar todos los tests (unit + integración + arquitectura)
+# Run all tests (unit + integration + architecture)
 dotnet test
 
-# Ejecutar la API
+# Run the API
 dotnet run --project src/UserManagement.API
 ```
 
-## Pruebas
+## Tests
 
 - **Unit tests (`UserManagement.UnitTests`)**  
-  - `SmokeTests` usa **FluentAssertions** para comprobar que el proyecto de tests carga y que el ensamblado `UserManagement.Domain` puede cargarse vía `AssemblyReference`.
+  - `SmokeTests` uses **FluentAssertions** to verify that the test project loads and that the `UserManagement.Domain` assembly can be loaded via `AssemblyReference`.
 
 - **Integration tests (`UserManagement.IntegrationTests`)**  
-  - `HealthCheckTests` (FluentAssertions) valida que la API responde en la raíz (`/`) y en `/health`.  
-  - `ArquitectureTests` usa **NetArchTest.Rules** para garantizar las reglas de arquitectura entre proyectos (`Domain`, `Application`, `Infrastructure`, `API`) basadas en los tipos `AssemblyReference` de cada capa.
+  - `HealthCheckTests` (FluentAssertions) validates that the API responds at the root (`/`) and at `/health`.  
+  - `ArquitectureTests` uses **NetArchTest.Rules** to enforce architecture rules between projects (`Domain`, `Application`, `Infrastructure`, `API`) based on the `AssemblyReference` types of each layer.
 
 - **Application unit tests (`UserManagement.Application.UnitTests`)**  
-  - Tests unitarios de handlers (`RegisterUser`, `VerifyOtp`) usando fakes.
-  - Test del pipeline `ValidationBehavior` (FluentValidation + MediatR).
+  - Unit tests for handlers (`RegisterUser`, `VerifyOtp`) using fakes.
+  - Test for the `ValidationBehavior` pipeline (FluentValidation + MediatR).
 
-## Configuración (.env)
+## Configuration (.env)
 
-La configuración se carga desde un archivo **.env** (DotNetEnv) antes de crear el host. Copia `.env.example` a `.env` dentro de `src/UserManagement.API/` y ajusta los valores.
+Configuration is loaded from a **.env** file (DotNetEnv) before creating the host. Copy `.env.example` to `.env` inside `src/UserManagement.API/` and adjust the values.
 
-- Usa doble guión bajo `__` para claves anidadas (ej. `Logging__LogLevel__Default=Information`).
-- Las variables se inyectan en el entorno antes de arrancar el host; el resto de la app usa `IConfiguration` como siempre.
-- `.env` está en `.gitignore`; no se versionan secretos.
+- Use double underscore `__` for nested keys (e.g., `Logging__LogLevel__Default=Information`).
+- Variables are injected into the environment before starting the host; the rest of the app uses `IConfiguration` as usual.
+- `.env` is in `.gitignore`; secrets are not versioned.
 
 ## Dependency Injection
 
-Los servicios se registran por capas en `Program.cs`:
+Services are registered by layers in `Program.cs`:
 
-- **API**: `AddWebServices(IServiceCollection, IConfiguration)` en `UserManagement.API.DependencyInjection` (Swagger, HealthChecks, EndpointsApiExplorer).
-- **Application**: `AddApplication(IServiceCollection, IConfiguration)` en `UserManagement.Application.DependencyInjection`.
-- **Infrastructure**: `AddInfrastructure(IServiceCollection, IConfiguration)` en `UserManagement.Infrastructure.DependencyInjection`.
+- **API**: `AddWebServices(IServiceCollection, IConfiguration)` in `UserManagement.API.DependencyInjection` (Swagger, HealthChecks, EndpointsApiExplorer).
+- **Application**: `AddApplication(IServiceCollection, IConfiguration)` in `UserManagement.Application.DependencyInjection`.
+- **Infrastructure**: `AddInfrastructure(IServiceCollection, IConfiguration)` in `UserManagement.Infrastructure.DependencyInjection`.
 
-Los tres se invocan al arranque en `Program.cs`; en cada milestone se irán añadiendo registros (MediatR, repositorios, DbContext, etc.).
+All three are invoked at startup in `Program.cs`; in each milestone, registrations will be added (MediatR, repositories, DbContext, etc.).
