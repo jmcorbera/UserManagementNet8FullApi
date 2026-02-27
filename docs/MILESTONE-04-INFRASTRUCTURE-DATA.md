@@ -1,24 +1,24 @@
 # Milestone 04 — Infrastructure/Data (MySQL)
 
-Documentación de lo implementado en el cuarto milestone: capa de persistencia con EF Core y MySQL, repositorios concretos, mapeos para entidades de dominio (incluyendo Value Objects), filtro global de soft delete, provider de fecha/hora, y tests de integración con Testcontainers.
+Documentation of what was implemented in the fourth milestone: persistence layer with EF Core and MySQL, concrete repositories, mappings for domain entities (including Value Objects), global soft delete filter, date/time provider, and integration tests with Testcontainers.
 
 ---
 
-## 1. Objetivo del milestone
+## 1. Milestone Objective
 
-- Implementar la capa **Infrastructure/Persistence** con EF Core y MySQL (Pomelo provider).
-- Crear `MySqlDbContext` con mapeos (Fluent API) para `User` y `UserOtp`.
-- Mapear **directamente** a las entidades de Dominio usando `ValueConverter` para `Email`.
-- Implementar **repositorios concretos** (`UserRepository`, `UserOtpRepository`) que persisten con `SaveChangesAsync`.
-- Configurar **filtro global de soft delete** para `User` (`IsDeleted`).
-- Implementar **`DateTimeProvider`** concreto para `IDateTimeProvider`.
-- **Registrar** repositorios y `IDateTimeProvider` en Infrastructure DI.
-- **Mantener fakes** en Application para servicios externos (`IEmailSender`, `IOtpGenerator`, `ICognitoIdentityService`) que se implementarán en milestones 06-07.
-- Agregar **integration tests con Testcontainers MySQL** para validar persistencia y soft delete.
+- Implement the **Infrastructure/Persistence** layer with EF Core and MySQL (Pomelo provider).
+- Create `MySqlDbContext` with mappings (Fluent API) for `User` and `UserOtp`.
+- Map **directly** to Domain entities using `ValueConverter` for `Email`.
+- Implement **concrete repositories** (`UserRepository`, `UserOtpRepository`) that persist with `SaveChangesAsync`.
+- Configure **global soft delete filter** for `User` (`IsDeleted`).
+- Implement concrete **`DateTimeProvider`** for `IDateTimeProvider`.
+- **Register** repositories and `IDateTimeProvider` in Infrastructure DI.
+- **Keep fakes** in Application for external services (`IEmailSender`, `IOtpGenerator`, `ICognitoIdentityService`) that will be implemented in milestones 06-07.
+- Add **integration tests with Testcontainers MySQL** to validate persistence and soft delete.
 
 ---
 
-## 2. Estructura (Infrastructure)
+## 2. Structure (Infrastructure)
 
 ```
 src/UserManagement.Infrastructure/
@@ -39,11 +39,11 @@ src/UserManagement.Infrastructure/
 
 ---
 
-## 3. Elementos principales
+## 3. Main Elements
 
-### 3.1 Paquetes
+### 3.1 Packages
 
-Paquetes agregados en `UserManagement.Infrastructure.csproj`:
+Packages added in `UserManagement.Infrastructure.csproj`:
 
 - `Microsoft.EntityFrameworkCore` (8.0.2)
 - `Pomelo.EntityFrameworkCore.MySql` (8.0.2)
@@ -51,39 +51,39 @@ Paquetes agregados en `UserManagement.Infrastructure.csproj`:
 
 ### 3.2 MySqlDbContext
 
-`MySqlDbContext` hereda de `DbContext` y expone:
+`MySqlDbContext` inherits from `DbContext` and exposes:
 
 - `DbSet<User> Users`
 - `DbSet<UserOtp> UserOtps`
 
-Aplica configuraciones desde el assembly usando `ApplyConfigurationsFromAssembly`.
+Applies configurations from the assembly using `ApplyConfigurationsFromAssembly`.
 
-### 3.3 Configuraciones EF Core (Fluent API)
+### 3.3 EF Core Configurations (Fluent API)
 
 **UserConfiguration**
 
-- Tabla: `Users`
+- Table: `Users`
 - PK: `Id` (Guid)
-- `Email`: Value Object convertido a string (max 320 chars), índice único
+- `Email`: Value Object converted to string (max 320 chars), unique index
 - `Name`: string (max 200 chars)
 - `Status`: enum `UserStatus` (int)
-- `CognitoSub`: string nullable (max 100 chars), índice
+- `CognitoSub`: nullable string (max 100 chars), index
 - `IsDeleted`: bool
-- Propiedades de auditoría: `Created`, `LastModified`
-- **Query filter global**: `HasQueryFilter(u => !u.IsDeleted)` para soft delete
+- Audit properties: `Created`, `LastModified`
+- **Global query filter**: `HasQueryFilter(u => !u.IsDeleted)` for soft delete
 
 **UserOtpConfiguration**
 
-- Tabla: `UserOtps`
+- Table: `UserOtps`
 - PK: `Id` (Guid)
-- `Email`: Value Object convertido a string (max 320 chars)
+- `Email`: Value Object converted to string (max 320 chars)
 - `Code`: string (max 20 chars)
 - `ExpiresAt`: DateTimeOffset
 - `Used`: bool
 - `CreatedAt`: DateTimeOffset
-- Índices compuestos: `(Email, Code)` y `(Email, CreatedAt)`
+- Composite indexes: `(Email, Code)` and `(Email, CreatedAt)`
 
-**ValueConverter para Email**
+**ValueConverter for Email**
 
 ```csharp
 var emailConverter = new ValueConverter<Email, string>(
@@ -91,42 +91,42 @@ var emailConverter = new ValueConverter<Email, string>(
     v => Email.Create(v));
 ```
 
-Permite que EF Core persista el Value Object `Email` como string en la BD.
+Allows EF Core to persist the `Email` Value Object as a string in the database.
 
 ---
 
-### 3.4 Repositorios
+### 3.4 Repositories
 
 **UserRepository**
 
-Implementa `IUserRepository` con:
+Implements `IUserRepository` with:
 
 - `GetByIdAsync`
 - `GetByEmailAsync`
 - `GetByCognitoSubAsync`
-- `GetAllAsync` (ordenado por `Created` descendente)
-- `AddAsync` (con `SaveChangesAsync`)
-- `UpdateAsync` (con `SaveChangesAsync`)
+- `GetAllAsync` (ordered by `Created` descending)
+- `AddAsync` (with `SaveChangesAsync`)
+- `UpdateAsync` (with `SaveChangesAsync`)
 - `ExistsByEmailAsync`
 
-Todos los métodos de lectura respetan el **filtro global de soft delete**.
+All read methods respect the **global soft delete filter**.
 
 **UserOtpRepository**
 
-Implementa `IUserOtpRepository` con:
+Implements `IUserOtpRepository` with:
 
 - `GetByEmailAndCodeAsync`
-- `GetLatestByEmailAsync` (ordenado por `CreatedAt` descendente)
-- `AddAsync` (con `SaveChangesAsync`)
-- `UpdateAsync` (con `SaveChangesAsync`)
+- `GetLatestByEmailAsync` (ordered by `CreatedAt` descending)
+- `AddAsync` (with `SaveChangesAsync`)
+- `UpdateAsync` (with `SaveChangesAsync`)
 
 ---
 
 ### 3.5 DateTimeProvider
 
-**Implementación concreta**
+**Concrete Implementation**
 
-`DateTimeProvider` implementa `IDateTimeProvider` retornando `DateTimeOffset.UtcNow`. Se registra como Singleton en Infrastructure.
+`DateTimeProvider` implements `IDateTimeProvider` returning `DateTimeOffset.UtcNow`. It is registered as Singleton in Infrastructure.
 
 ```csharp
 public sealed class DateTimeProvider : IDateTimeProvider
@@ -139,55 +139,55 @@ public sealed class DateTimeProvider : IDateTimeProvider
 
 ### 3.6 Dependency Injection
 
-**Cambios en `UserManagement.Application.DependencyInjection`**
+**Changes in `UserManagement.Application.DependencyInjection`**
 
-- Registra MediatR, FluentValidation, pipeline behaviors y options.
-- **Mantiene fakes** para servicios externos que se implementarán en milestones posteriores:
+- Registers MediatR, FluentValidation, pipeline behaviors and options.
+- **Keeps fakes** for external services that will be implemented in later milestones:
   - `IEmailSender` → `EmailSender` (fake, milestone 06)
   - `IOtpGenerator` → `OtpGenerator` (fake, milestone 06)
   - `ICognitoIdentityService` → `CognitoIdentityService` (fake, milestone 07)
 
-**Cambios en `UserManagement.Infrastructure.DependencyInjection`**
+**Changes in `UserManagement.Infrastructure.DependencyInjection`**
 
-- Registra `MySqlDbContext` con MySQL (Pomelo) usando `ConnectionStrings:MySqlServerConnectionString`.
-- Usa `ServerVersion.AutoDetect` para detectar automáticamente la versión de MySQL.
-- Registra repositorios concretos:
+- Registers `MySqlDbContext` with MySQL (Pomelo) using `ConnectionStrings:MySqlServerConnectionString`.
+- Uses `ServerVersion.AutoDetect` to automatically detect MySQL version.
+- Registers concrete repositories:
   - `IUserRepository` → `UserRepository` (Scoped)
   - `IUserOtpRepository` → `UserOtpRepository` (Scoped)
-- Registra provider de fecha/hora:
+- Registers date/time provider:
   - `IDateTimeProvider` → `DateTimeProvider` (Singleton)
-- **Condicional**: solo registra DbContext si existe `ConnectionStrings:MySqlServerConnectionString` (para no romper tests que no usan DB).
+- **Conditional**: only registers DbContext if `ConnectionStrings:MySqlServerConnectionString` exists (to avoid breaking tests that don't use DB).
 
 ---
 
-## 4. Tests de integración
+## 4. Integration Tests
 
-### 4.1 Paquetes de test
+### 4.1 Test Packages
 
-Agregado en `UserManagement.IntegrationTests.csproj`:
+Added in `UserManagement.IntegrationTests.csproj`:
 
 - `Testcontainers.MySql` (3.10.0)
-- Referencia a proyecto `UserManagement.Infrastructure`
+- Reference to `UserManagement.Infrastructure` project
 
 ### 4.2 PersistenceTests
 
-Clase de test que valida:
+Test class that validates:
 
-1. **Persistencia básica**: `AddAsync` + `GetByEmailAsync` funciona correctamente.
-2. **Soft delete**: usuarios marcados como `IsDeleted` no se devuelven en `GetByEmailAsync`, `GetAllAsync` ni `ExistsByEmailAsync`.
-3. **UserOtpRepository**: `AddAsync` + `GetByEmailAndCodeAsync` funciona.
+1. **Basic persistence**: `AddAsync` + `GetByEmailAsync` works correctly.
+2. **Soft delete**: users marked as `IsDeleted` are not returned in `GetByEmailAsync`, `GetAllAsync` or `ExistsByEmailAsync`.
+3. **UserOtpRepository**: `AddAsync` + `GetByEmailAndCodeAsync` works.
 
-**Infraestructura de test**
+**Test Infrastructure**
 
-- Usa `Testcontainers.MySql` para levantar un contenedor MySQL efímero.
-- Implementa `IAsyncLifetime` (xUnit) para inicializar/destruir el contenedor por clase de test.
-- Llama a `EnsureCreatedAsync()` para crear el schema antes de ejecutar tests.
+- Uses `Testcontainers.MySql` to spin up an ephemeral MySQL container.
+- Implements `IAsyncLifetime` (xUnit) to initialize/destroy the container per test class.
+- Calls `EnsureCreatedAsync()` to create the schema before running tests.
 
 ---
 
-## 5. Verificación del milestone
+## 5. Milestone Verification
 
-### 5.1 Compilación
+### 5.1 Build
 
 ```bash
 dotnet build
@@ -199,7 +199,7 @@ dotnet build
 dotnet test
 ```
 
-**Tests que deben pasar**:
+**Tests that should pass**:
 
 - `HealthCheckTests` (milestone 01)
 - `ArquitectureTests` (milestone 01-03)
@@ -209,96 +209,96 @@ dotnet test
   - `UserRepository_ExistsByEmail_ShouldRespectSoftDelete`
   - `UserOtpRepository_AddAndGetByEmailAndCode_ShouldWork`
 
-### 5.3 Verificaciones manuales
+### 5.3 Manual Verifications
 
-- ✅ Infrastructure compila con EF Core + Pomelo MySQL.
-- ✅ `AppDbContext` tiene configuraciones Fluent API para `User` y `UserOtp`.
-- ✅ `Email` (Value Object) se persiste como string usando `ValueConverter`.
-- ✅ Filtro global de soft delete funciona (usuarios con `IsDeleted = true` no se devuelven).
-- ✅ Repositorios concretos funcionan con `SaveChangesAsync`.
-- ✅ Application **no** depende de Infrastructure (se mantiene regla de arquitectura).
-- ✅ Tests de persistencia pasan con Testcontainers MySQL.
-
----
-
-## 6. Próximos pasos (Milestone 05)
-
-En el milestone 05 (Outbox + Idempotencia) se implementará:
-
-- Tabla `OutboxMessages` para eventos de dominio.
-- Persistencia de eventos en la misma transacción (Unit of Work).
-- Background processor para publicar eventos.
-- Tabla `IdempotencyKeys` para comandos idempotentes.
-- Decorator de idempotencia para `RegisterUser` y `VerifyOtp`.
+- ✅ Infrastructure compiles with EF Core + Pomelo MySQL.
+- ✅ `AppDbContext` has Fluent API configurations for `User` and `UserOtp`.
+- ✅ `Email` (Value Object) is persisted as string using `ValueConverter`.
+- ✅ Global soft delete filter works (users with `IsDeleted = true` are not returned).
+- ✅ Concrete repositories work with `SaveChangesAsync`.
+- ✅ Application does **not** depend on Infrastructure (architecture rule is maintained).
+- ✅ Persistence tests pass with Testcontainers MySQL.
 
 ---
 
-## 7. Archivos clave creados/modificados
+## 6. Next Steps (Milestone 05)
 
-| Archivo | Propósito |
+In milestone 05 (Outbox + Idempotency) the following will be implemented:
+
+- `OutboxMessages` table for domain events.
+- Event persistence in the same transaction (Unit of Work).
+- Background processor to publish events.
+- `IdempotencyKeys` table for idempotent commands.
+- Idempotency decorator for `RegisterUser` and `VerifyOtp`.
+
+---
+
+## 7. Key Files Created/Modified
+
+| File | Purpose |
 |---------|-----------|
-| `Persistence/MySqlDbContext.cs` | DbContext con DbSets de User y UserOtp |
-| `Persistence/Configurations/UserConfiguration.cs` | Fluent API para User (Email converter, soft delete filter, índices) |
-| `Persistence/Configurations/UserOtpConfiguration.cs` | Fluent API para UserOtp (Email converter, índices compuestos) |
-| `Persistence/Repositories/UserRepository.cs` | Implementación concreta de IUserRepository con EF Core |
-| `Persistence/Repositories/UserOtpRepository.cs` | Implementación concreta de IUserOtpRepository con EF Core |
-| `Services/DateTimeProvider.cs` | Implementación concreta de IDateTimeProvider |
-| `DependencyInjection.cs` (Infrastructure) | Registro de DbContext + repositorios + DateTimeProvider |
-| `DependencyInjection.cs` (Application) | Registro de fakes para servicios externos (EmailSender, OtpGenerator, CognitoIdentityService) |
-| `tests/UserManagement.IntegrationTests/PersistenceTests.cs` | Tests de persistencia con Testcontainers MySQL |
+| `Persistence/MySqlDbContext.cs` | DbContext with User and UserOtp DbSets |
+| `Persistence/Configurations/UserConfiguration.cs` | Fluent API for User (Email converter, soft delete filter, indexes) |
+| `Persistence/Configurations/UserOtpConfiguration.cs` | Fluent API for UserOtp (Email converter, composite indexes) |
+| `Persistence/Repositories/UserRepository.cs` | Concrete implementation of IUserRepository with EF Core |
+| `Persistence/Repositories/UserOtpRepository.cs` | Concrete implementation of IUserOtpRepository with EF Core |
+| `Services/DateTimeProvider.cs` | Concrete implementation of IDateTimeProvider |
+| `DependencyInjection.cs` (Infrastructure) | Registration of DbContext + repositories + DateTimeProvider |
+| `DependencyInjection.cs` (Application) | Registration of fakes for external services (EmailSender, OtpGenerator, CognitoIdentityService) |
+| `tests/UserManagement.IntegrationTests/PersistenceTests.cs` | Persistence tests with Testcontainers MySQL |
 
 ---
 
-## 8. Comandos de verificación
+## 8. Verification Commands
 
 ```bash
-# Compilar
+# Build
 dotnet build
 
-# Ejecutar tests
+# Run tests
 dotnet test
 
-# Ejecutar solo tests de persistencia
+# Run only persistence tests
 dotnet test --filter FullyQualifiedName~PersistenceTests
 ```
 
 ---
 
-## 9. Notas técnicas
+## 9. Technical Notes
 
-### Soft delete en MySQL
+### Soft Delete in MySQL
 
-El filtro global `HasQueryFilter(u => !u.IsDeleted)` se aplica automáticamente a todas las queries de EF Core sobre `User`. Para incluir usuarios eliminados (ej. auditoría), se puede usar `IgnoreQueryFilters()`.
+The global filter `HasQueryFilter(u => !u.IsDeleted)` is automatically applied to all EF Core queries on `User`. To include deleted users (e.g., for auditing), you can use `IgnoreQueryFilters()`.
 
-### ValueConverter para Email
+### ValueConverter for Email
 
-El `ValueConverter` permite que EF Core:
+The `ValueConverter` allows EF Core to:
 
-- **Persista**: convierte `Email` → `string` (usando `email.Value`).
-- **Hidrate**: convierte `string` → `Email` (usando `Email.Create(value)`).
+- **Persist**: converts `Email` → `string` (using `email.Value`).
+- **Hydrate**: converts `string` → `Email` (using `Email.Create(value)`).
 
-Esto mantiene el Value Object en el dominio sin crear entidades de persistencia separadas.
+This keeps the Value Object in the domain without creating separate persistence entities.
 
-### Índice único en Email
+### Unique Index on Email
 
-MySQL respeta collation (case-sensitivity) en índices únicos. La configuración actual usa collation por defecto de MySQL (generalmente `utf8mb4_0900_ai_ci` en MySQL 8.0, que es case-insensitive). El Value Object `Email` normaliza a lowercase antes de persistir, evitando duplicados por mayúsculas/minúsculas.
+MySQL respects collation (case-sensitivity) in unique indexes. The current configuration uses MySQL's default collation (typically `utf8mb4_0900_ai_ci` in MySQL 8.0, which is case-insensitive). The `Email` Value Object normalizes to lowercase before persisting, avoiding duplicates due to case differences.
 
 ### Testcontainers
 
-Testcontainers levanta un contenedor Docker de MySQL 8.0 durante la ejecución de tests. Requiere:
+Testcontainers spins up a MySQL 8.0 Docker container during test execution. It requires:
 
-- Docker Desktop (o Docker Engine) corriendo.
-- Permisos para crear/destruir contenedores.
+- Docker Desktop (or Docker Engine) running.
+- Permissions to create/destroy containers.
 
-Si Docker no está disponible, los tests de `PersistenceTests` fallarán. Para CI/CD, asegurar que el runner tenga Docker habilitado.
+If Docker is not available, `PersistenceTests` tests will fail. For CI/CD, ensure the runner has Docker enabled.
 
 ---
 
-## 10. Referencias
+## 10. References
 
-- **Milestone 01**: Setup de la solución y estructura base.
-- **Milestone 02**: Dominio (DDD) con entidades, VOs, events, factories, repos y specifications.
-- **Milestone 03**: Application Core con CQRS, Result pattern, feature flags y handlers.
+- **Milestone 01**: Solution setup and base structure.
+- **Milestone 02**: Domain (DDD) with entities, VOs, events, factories, repos and specifications.
+- **Milestone 03**: Application Core with CQRS, Result pattern, feature flags and handlers.
 - **EF Core Value Conversions**: [Microsoft Docs](https://learn.microsoft.com/en-us/ef/core/modeling/value-conversions)
 - **Pomelo MySQL Provider**: [GitHub](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
 - **Testcontainers**: [Testcontainers for .NET](https://dotnet.testcontainers.org/)
