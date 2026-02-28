@@ -23,9 +23,10 @@ public class RegisterUserHandlerTests
             new FakeUserOtpRepository(),
             new FakeEmailSender(),
             new FakeOtpGenerator(),
+            new FakeUnitOfWork(),
             Options.Create(new FeatureFlagsOptions { EnableOtp = true }));
 
-        var command = new RegisterUserCommand("existing@example.com", "Test User");
+        var command = new RegisterUserCommand("existing@example.com", "Test User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -46,9 +47,10 @@ public class RegisterUserHandlerTests
             otpRepo,
             emailSender,
             otpGenerator,
+            new FakeUnitOfWork(),
             Options.Create(new FeatureFlagsOptions { EnableOtp = true }));
 
-        var command = new RegisterUserCommand("newuser@example.com", "New User");
+        var command = new RegisterUserCommand("newuser@example.com", "New User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -65,9 +67,10 @@ public class RegisterUserHandlerTests
             new FakeUserOtpRepository(),
             new FakeEmailSender(),
             new FakeOtpGenerator(),
+            new FakeUnitOfWork(),
             Options.Create(new FeatureFlagsOptions { EnableOtp = false }));
 
-        var command = new RegisterUserCommand("user@example.com", "User");
+        var command = new RegisterUserCommand("user@example.com", "User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();

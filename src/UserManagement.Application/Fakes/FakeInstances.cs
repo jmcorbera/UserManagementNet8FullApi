@@ -1,73 +1,9 @@
 
 using UserManagement.Application.Common.Abstractions;
-using UserManagement.Domain.Entities;
-using UserManagement.Domain.Repositories;
-using UserManagement.Domain.ValueObjects;
 
 // WARNING: These are fake implementations for development purposes only
 // Real implementation will be added later in infrastructure layer
 namespace UserManagement.Application.Fakes.FakeInstances;
-
-public class UserRepository : IUserRepository
-{
-    public Task AddAsync(User user, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool> ExistsByEmailAsync(Email email, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User?> GetByCognitoSubAsync(string cognitoSub, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateAsync(User user, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class UserOtpRepository : IUserOtpRepository
-{
-    public Task AddAsync(UserOtp userOtp, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<UserOtp?> GetByEmailAndCodeAsync(Email email, string code, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<UserOtp?> GetLatestByEmailAsync(Email email, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateAsync(UserOtp userOtp, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-}
 
 public class EmailSender : IEmailSender
 {

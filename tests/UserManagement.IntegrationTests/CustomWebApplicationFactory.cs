@@ -2,7 +2,6 @@ extern alias Api;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using UserManagement.Application.Common.Abstractions;
 using UserManagement.Domain.Repositories;
 using UserManagement.IntegrationTests.Stubs;
@@ -22,6 +21,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         {
             services.AddSingleton<IUserRepository, StubUserRepository>();
             services.AddSingleton<IUserOtpRepository, StubUserOtpRepository>();
+            services.AddSingleton<IUnitOfWork, StubUnitOfWork>();
             services.AddSingleton<IEmailSender, StubEmailSender>();
             services.AddSingleton<IOtpGenerator, StubOtpGenerator>();
             services.AddSingleton<IDateTimeProvider, StubDateTimeProvider>();

@@ -1,4 +1,5 @@
 using FluentValidation;
+using UserManagement.Application.Common.Validators;
 
 namespace UserManagement.Application.Features.Users.Commands.RegisterUser;
 
@@ -10,6 +11,8 @@ public sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUse
 
     public RegisterUserCommandValidator()
     {
+        Include(new IdempotentCommandValidator<RegisterUserCommand>());
+        
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
             .Must(e => EmailRegex.IsMatch(e?.Trim() ?? "")).WithMessage("Email must be a valid format.");

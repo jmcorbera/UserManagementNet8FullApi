@@ -14,17 +14,20 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
     private readonly IUserOtpRepository _otpRepository;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly ICognitoIdentityService _cognitoService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VerifyOtpCommandHandler(
         IUserRepository userRepository,
         IUserOtpRepository otpRepository,
         IDateTimeProvider dateTimeProvider,
-        ICognitoIdentityService cognitoService)
+        ICognitoIdentityService cognitoService,
+        IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _otpRepository = otpRepository;
         _dateTimeProvider = dateTimeProvider;
         _cognitoService = cognitoService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
@@ -46,11 +49,10 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
         if (user == null || user.IsDeleted)
             return Result.Failure(Error.NotFound("User not found."));
 
-        // Idempotencia: si ya está activado y vinculado, salir OK
+
         if (user.Status == UserStatus.Active && user.CognitoSub != null)
             return Result.Success();
 
-        // Crear en Cognito SOLO si aún no está vinculado
         string cognitoSub;
 
         if (user.CognitoSub == null)
@@ -81,13 +83,15 @@ public sealed class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, 
             return Result.Failure(Error.OtpInvalid("The code has already been used."));
         }
 
-        user.Activate();
-
         if (user.CognitoSub == null)
             user.SetCognitoSub(cognitoSub);
 
+        user.ActivateAndRaiseEvent(cognitoSub);
+
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _otpRepository.UpdateAsync(otp, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

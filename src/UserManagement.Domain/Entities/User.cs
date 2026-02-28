@@ -1,5 +1,6 @@
 using UserManagement.Domain.Common;
 using UserManagement.Domain.Enums;
+using UserManagement.Domain.Events;
 using UserManagement.Domain.ValueObjects;
 
 namespace UserManagement.Domain.Entities;
@@ -40,6 +41,27 @@ public class User : BaseAuditableEntity<Guid>
 
         Status = UserStatus.Active;
         SetLastModified(null);
+    }
+
+    /// <summary>
+    /// Activa el usuario y levanta el evento UserVerified.
+    /// </summary>
+    public void ActivateAndRaiseEvent(string cognitoSub)
+    {
+        if (Status == UserStatus.Active && CognitoSub != null)
+        {
+            return; // Ya está activo
+        }
+
+        Status = UserStatus.Active;
+        SetLastModified(null);
+
+        RaiseDomainEvent(new UserVerified(
+            Id,
+            Email,
+            cognitoSub,
+            DateTimeOffset.UtcNow
+        ));
     }
 
     /// <summary>
@@ -90,6 +112,20 @@ public class User : BaseAuditableEntity<Guid>
     public static User CreatePending(Guid id, Email email, string name)
     {
         return new User(id, email, name, UserStatus.PendingVerification);
+    }
+
+    /// <summary>
+    /// Levanta el evento de registro solicitado.
+    /// </summary>
+    public void RaiseRegistrationRequestedEvent(string otpCode)
+    {
+        RaiseDomainEvent(new UserRegistrationRequested(
+            Id,
+            Email,
+            Name,
+            otpCode,
+            DateTimeOffset.UtcNow
+        ));
     }
 
     /// <summary>

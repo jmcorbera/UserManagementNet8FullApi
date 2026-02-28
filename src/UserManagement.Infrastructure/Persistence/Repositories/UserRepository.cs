@@ -42,13 +42,11 @@ public sealed class UserRepository : IUserRepository
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         await _dbContext.Users.AddAsync(user, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         _dbContext.Users.Update(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken cancellationToken = default)

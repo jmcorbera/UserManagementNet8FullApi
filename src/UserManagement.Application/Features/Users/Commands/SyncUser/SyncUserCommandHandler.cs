@@ -1,4 +1,5 @@
 using MediatR;
+using UserManagement.Application.Common.Abstractions;
 using UserManagement.Application.Common.Results;
 using UserManagement.Domain.Factories;
 using UserManagement.Domain.Repositories;
@@ -9,10 +10,12 @@ namespace UserManagement.Application.Features.Users.Commands.SyncUser;
 public sealed class SyncUserCommandHandler : IRequestHandler<SyncUserCommand, Result>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public SyncUserCommandHandler(IUserRepository userRepository)
+    public SyncUserCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(SyncUserCommand request, CancellationToken cancellationToken)
@@ -24,7 +27,7 @@ public sealed class SyncUserCommandHandler : IRequestHandler<SyncUserCommand, Re
         var existingByCognito = await _userRepository.GetByCognitoSubAsync(cognitoSub, cancellationToken);
         var existingByEmail = await _userRepository.GetByEmailAsync(email, cancellationToken);
 
-        // Caso inconsistente
+        // Inconsistent case
         if (existingByCognito != null &&
             existingByEmail != null &&
             existingByCognito.Id != existingByEmail.Id)
@@ -42,11 +45,14 @@ public sealed class SyncUserCommandHandler : IRequestHandler<SyncUserCommand, Re
             user.UpdateName(name);
 
             await _userRepository.UpdateAsync(user, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }
 
         var newUser = UserFactory.FromCognito(email, name, cognitoSub);
         await _userRepository.AddAsync(newUser, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 }

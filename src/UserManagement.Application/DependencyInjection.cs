@@ -18,12 +18,14 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(IdempotencyBehavior<,>));
 
         services.Configure<FeatureFlagsOptions>(configuration.GetSection(FeatureFlagsOptions.SectionName));
+        services.Configure<IdempotencyOptions>(configuration.GetSection(IdempotencyOptions.SectionName));
 
         services.AddTransient<IEmailSender, EmailSender>();
         services.AddTransient<IOtpGenerator, OtpGenerator>();
-        services.AddTransient<ICognitoIdentityService, CognitoIdentityService>();
+        services.AddTransient<ICognitoIdentityService, CognitoIdentityService>();   
 
         return services;
     }

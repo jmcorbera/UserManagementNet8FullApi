@@ -12,6 +12,7 @@ REST API (.NET 8) for user management with registration (OTP + Cognito), Clean A
 - **[Milestone 02 — Domain](docs/MILESTONE-02-DOMAIN.md)** — Complete domain implementation (entities, value objects, domain events, factory, repository interfaces, specifications).
 - **[Milestone 03 — Application Core](docs/MILESTONE-03-APPLICATION-CORE.md)** — Application Core with CQRS (MediatR), validation (FluentValidation + pipeline), Result pattern, feature flags, abstractions and tests.
 - **[Milestone 04 — Infrastructure/Data](docs/MILESTONE-04-INFRASTRUCTURE-DATA.md)** — Persistence layer with EF Core and MySQL, concrete repositories, entity mappings, soft delete global filter, and integration tests with Testcontainers.
+- **[Milestone 05 — Outbox + Idempotency](docs/MILESTONE-05-OUTBOX-IDEMPOTENCY.md)** — Transactional Outbox pattern for reliable domain event publishing, Idempotency pattern for command deduplication, Unit of Work pattern, and background processor for event publishing.
 
 ## Build and Tests
 
