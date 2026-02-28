@@ -31,12 +31,10 @@ public sealed class UserOtpRepository : IUserOtpRepository
     public async Task AddAsync(UserOtp otp, CancellationToken cancellationToken = default)
     {
         await _dbContext.UserOtps.AddAsync(otp, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(UserOtp otp, CancellationToken cancellationToken = default)
     {
         _dbContext.UserOtps.Update(otp);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

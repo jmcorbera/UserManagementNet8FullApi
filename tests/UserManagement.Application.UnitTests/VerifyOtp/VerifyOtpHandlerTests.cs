@@ -22,8 +22,8 @@ public class VerifyOtpHandlerTests
         var user = UserFactory.CreatePending(Email.Create("user@example.com"), "User");
         await userRepo.AddAsync(user, CancellationToken.None);
 
-        var handler = new VerifyOtpCommandHandler(userRepo, otpRepo, dateTime, cognito);
-        var command = new VerifyOtpCommand("user@example.com", "000000");
+        var handler = new VerifyOtpCommandHandler(userRepo, otpRepo, dateTime, cognito, new FakeUnitOfWork());
+        var command = new VerifyOtpCommand("user@example.com", "000000", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
@@ -46,8 +46,8 @@ public class VerifyOtpHandlerTests
         var dateTime = new FakeDateTimeProvider { UtcNow = DateTimeOffset.UtcNow };
         var cognito = new FakeCognitoIdentityService();
 
-        var handler = new VerifyOtpCommandHandler(userRepo, otpRepo, dateTime, cognito);
-        var command = new VerifyOtpCommand("user@example.com", "123456");
+        var handler = new VerifyOtpCommandHandler(userRepo, otpRepo, dateTime, cognito, new FakeUnitOfWork());
+        var command = new VerifyOtpCommand("user@example.com", "123456", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();

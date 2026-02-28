@@ -21,7 +21,7 @@ public class ValidationBehaviorTests
         var provider = services.BuildServiceProvider();
 
         var mediator = provider.GetRequiredService<IMediator>();
-        var command = new RegisterUserCommand("", "Name");
+        var command = new RegisterUserCommand("", "Name", Guid.NewGuid());
         var result = await mediator.Send(command);
 
         result.IsSuccess.Should().BeFalse();

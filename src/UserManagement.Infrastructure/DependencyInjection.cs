@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using UserManagement.Application.Common.Abstractions;
 using UserManagement.Domain.Repositories;
+using UserManagement.Infrastructure.BackgroundServices;
 using UserManagement.Infrastructure.Persistence;
 using UserManagement.Infrastructure.Persistence.Repositories;
 using UserManagement.Infrastructure.Services;
@@ -28,8 +29,15 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserOtpRepository, UserOtpRepository>();
+        services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
+        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+
+        services.Configure<OutboxProcessorOptions>(configuration.GetSection(OutboxProcessorOptions.SectionName));
+        services.AddHostedService<OutboxProcessor>();
 
         return services;
     }

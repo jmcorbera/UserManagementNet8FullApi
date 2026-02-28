@@ -55,6 +55,7 @@ public sealed class PersistenceTests : IAsyncLifetime
         var user = UserFactory.CreatePending(email, "Test User");
 
         await repository.AddAsync(user);
+        await _dbContext!.SaveChangesAsync();
 
         var retrieved = await repository.GetByEmailAsync(email);
 
@@ -72,9 +73,11 @@ public sealed class PersistenceTests : IAsyncLifetime
         var user = UserFactory.CreatePending(email, "To Delete");
 
         await repository.AddAsync(user);
+        await _dbContext!.SaveChangesAsync();
 
         user.Delete();
         await repository.UpdateAsync(user);
+        await _dbContext!.SaveChangesAsync();
 
         var retrievedByEmail = await repository.GetByEmailAsync(email);
         var allUsers = await repository.GetAllAsync();
@@ -91,12 +94,14 @@ public sealed class PersistenceTests : IAsyncLifetime
         var user = UserFactory.CreatePending(email, "Exists Test");
 
         await repository.AddAsync(user);
+        await _dbContext!.SaveChangesAsync();
 
         var existsBeforeDelete = await repository.ExistsByEmailAsync(email);
         existsBeforeDelete.Should().BeTrue();
 
         user.Delete();
         await repository.UpdateAsync(user);
+        await _dbContext!.SaveChangesAsync();
 
         var existsAfterDelete = await repository.ExistsByEmailAsync(email);
         existsAfterDelete.Should().BeFalse("soft deleted users should not exist");
@@ -110,6 +115,7 @@ public sealed class PersistenceTests : IAsyncLifetime
         var otp = Domain.Entities.UserOtp.Create(Guid.NewGuid(), email, "123456", TimeSpan.FromMinutes(10));
 
         await repository.AddAsync(otp);
+        await _dbContext!.SaveChangesAsync();
 
         var retrieved = await repository.GetByEmailAndCodeAsync(email, "123456");
 
