@@ -16,6 +16,8 @@ public sealed class OutboxMessage
         OccurredAt = occurredAt;
         ProcessedAt = null;
         Error = null;
+        RetryCount = 0;
+        NextRetryAt = null;
     }
 
     public Guid Id { get; private set; }
@@ -24,6 +26,8 @@ public sealed class OutboxMessage
     public DateTimeOffset OccurredAt { get; private set; }
     public DateTimeOffset? ProcessedAt { get; private set; }
     public string? Error { get; private set; }
+    public int RetryCount { get; private set; }
+    public DateTimeOffset? NextRetryAt { get; private set; }
 
     public static OutboxMessage Create(string type, string content, DateTimeOffset occurredAt)
     {
@@ -34,11 +38,29 @@ public sealed class OutboxMessage
     {
         ProcessedAt = DateTimeOffset.UtcNow;
         Error = null;
+        NextRetryAt = null;
     }
 
     public void MarkAsFailed(string error)
     {
         Error = error;
+    }
+
+    public void IncrementRetry(int initialRetryDelaySeconds, int backoffMultiplier)
+    {
+        RetryCount++;
+        var delaySeconds = initialRetryDelaySeconds * Math.Pow(backoffMultiplier, RetryCount - 1);
+        NextRetryAt = DateTimeOffset.UtcNow.AddSeconds(delaySeconds);
+    }
+
+    public bool CanRetry(int maxRetries)
+    {
+        return RetryCount < maxRetries && !ProcessedAt.HasValue;
+    }
+
+    public bool IsReadyForRetry()
+    {
+        return NextRetryAt.HasValue && DateTimeOffset.UtcNow >= NextRetryAt.Value;
     }
 
     public bool IsProcessed() => ProcessedAt.HasValue;

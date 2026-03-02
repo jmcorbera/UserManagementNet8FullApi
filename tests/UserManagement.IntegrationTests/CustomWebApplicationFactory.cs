@@ -24,6 +24,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton<IUnitOfWork, StubUnitOfWork>();
             services.AddSingleton<IEmailSender, StubEmailSender>();
             services.AddSingleton<IOtpGenerator, StubOtpGenerator>();
+            services.AddSingleton<IOtpSettingsProvider, StubOtpSettingsProvider>();
             services.AddSingleton<IDateTimeProvider, StubDateTimeProvider>();
             services.AddSingleton<ICognitoIdentityService, StubCognitoIdentityService>();
         });

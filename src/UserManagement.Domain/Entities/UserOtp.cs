@@ -16,7 +16,7 @@ public class UserOtp
         Email = email;
         Code = code;
         ExpiresAt = expiresAt;
-        Used = false;
+        IsUsed = false;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -25,14 +25,14 @@ public class UserOtp
     public Email Email { get; private set; } = null!;
     public string Code { get; private set; } = string.Empty;
     public DateTimeOffset ExpiresAt { get; private set; }
-    public bool Used { get; private set; }
+    public bool IsUsed { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
     public static UserOtp Create(Guid id, Email email, string code, TimeSpan validFor)
     {
         var now = DateTimeOffset.UtcNow;
         return new UserOtp(
-            Guid.NewGuid(),
+            id ,
             email,
             code,
             now.Add(validFor)
@@ -44,18 +44,20 @@ public class UserOtp
     /// </summary>
     public void MarkAsUsed()
     {
-        if (Used)
+        if (IsUsed)
         {
             throw new DomainException("OTP has already been used.");
         }
 
-        Used = true;
+        IsUsed = true;
     }
 
     /// <summary>
     /// Verifica si el OTP es válido (no usado y no expirado).
     /// </summary>
-    public bool IsValid(DateTimeOffset now) => !Used && ExpiresAt > now;
+    public bool IsValid(DateTimeOffset now) => !IsUsed && ExpiresAt > now;
 
     public bool IsValid() => IsValid(DateTimeOffset.UtcNow);
+
+    public override string ToString() => Code;
 }

@@ -8,4 +8,5 @@ public interface IIdempotencyRepository
     Task<IdempotencyKey?> GetByKeyAsync(Guid key, CancellationToken cancellationToken = default);
     Task MarkAsCompletedAsync(Guid key, string result, CancellationToken cancellationToken = default);
     Task MarkAsFailedAsync(Guid key, CancellationToken cancellationToken = default);
+    Task<int> DeleteExpiredAsync(TimeSpan ttl, CancellationToken cancellationToken = default);
 }

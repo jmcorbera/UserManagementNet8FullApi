@@ -82,7 +82,7 @@ public class UserOtpTests
         otp.MarkAsUsed();
 
         // Assert
-        otp.Used.Should().BeTrue();
+        otp.IsUsed.Should().BeTrue();
     }
 
     [Fact]

@@ -2,10 +2,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using UserManagement.Application.Common.Abstractions;
 using UserManagement.Application.Common.Behaviors;
 using UserManagement.Application.Common.Options;
-using UserManagement.Application.Fakes.FakeInstances;
 
 namespace UserManagement.Application;
 
@@ -22,10 +20,6 @@ public static class DependencyInjection
 
         services.Configure<FeatureFlagsOptions>(configuration.GetSection(FeatureFlagsOptions.SectionName));
         services.Configure<IdempotencyOptions>(configuration.GetSection(IdempotencyOptions.SectionName));
-
-        services.AddTransient<IEmailSender, EmailSender>();
-        services.AddTransient<IOtpGenerator, OtpGenerator>();
-        services.AddTransient<ICognitoIdentityService, CognitoIdentityService>();   
 
         return services;
     }

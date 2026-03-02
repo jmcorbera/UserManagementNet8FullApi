@@ -30,7 +30,7 @@ public sealed class UserOtpConfiguration : IEntityTypeConfiguration<UserOtp>
         builder.Property(o => o.ExpiresAt)
             .IsRequired();
 
-        builder.Property(o => o.Used)
+        builder.Property(o => o.IsUsed)
             .IsRequired();
 
         builder.Property(o => o.CreatedAt)
