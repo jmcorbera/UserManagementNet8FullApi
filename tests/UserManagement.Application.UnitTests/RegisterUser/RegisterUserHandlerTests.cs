@@ -24,7 +24,8 @@ public class RegisterUserHandlerTests
             new FakeEmailSender(),
             new FakeOtpGenerator(),
             new FakeUnitOfWork(),
-            Options.Create(new FeatureFlagsOptions { EnableOtp = true }));
+            Options.Create(new FeatureFlagsOptions { EnableOtp = true }),
+            new FakeOtpSettingsProvider());
 
         var command = new RegisterUserCommand("existing@example.com", "Test User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
@@ -48,7 +49,8 @@ public class RegisterUserHandlerTests
             emailSender,
             otpGenerator,
             new FakeUnitOfWork(),
-            Options.Create(new FeatureFlagsOptions { EnableOtp = true }));
+            Options.Create(new FeatureFlagsOptions { EnableOtp = true }),
+            new FakeOtpSettingsProvider());
 
         var command = new RegisterUserCommand("newuser@example.com", "New User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
@@ -60,20 +62,22 @@ public class RegisterUserHandlerTests
     }
 
     [Fact]
-    public async Task Handle_When_EnableOtp_False_Returns_FeatureDisabled()
+    public async Task Handle_When_EnableOtp_False_Succeeds_Without_Otp()
     {
+        var emailSender = new FakeEmailSender();
         var handler = new RegisterUserCommandHandler(
             new FakeUserRepository(),
             new FakeUserOtpRepository(),
-            new FakeEmailSender(),
+            emailSender,
             new FakeOtpGenerator(),
             new FakeUnitOfWork(),
-            Options.Create(new FeatureFlagsOptions { EnableOtp = false }));
+            Options.Create(new FeatureFlagsOptions { EnableOtp = false }),
+            new FakeOtpSettingsProvider());
 
         var command = new RegisterUserCommand("user@example.com", "User", Guid.NewGuid());
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error!.Code.Should().Be(Error.Codes.FeatureDisabled);
+        result.IsSuccess.Should().BeTrue();
+        emailSender.Sent.Should().BeEmpty();
     }
 }

@@ -18,6 +18,7 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
     private readonly IOtpGenerator _otpGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly FeatureFlagsOptions _featureFlags;
+    private readonly IOtpSettingsProvider _otpSettings;
 
     public RegisterUserCommandHandler(
         IUserRepository userRepository,
@@ -25,7 +26,8 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         IEmailSender emailSender,
         IOtpGenerator otpGenerator,
         IUnitOfWork unitOfWork,
-        IOptions<FeatureFlagsOptions> featureFlags)
+        IOptions<FeatureFlagsOptions> featureFlags,
+        IOtpSettingsProvider otpSettings)
     {
         _userRepository = userRepository;
         _otpRepository = otpRepository;
@@ -33,6 +35,7 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         _otpGenerator = otpGenerator;
         _unitOfWork = unitOfWork;
         _featureFlags = featureFlags.Value;
+        _otpSettings = otpSettings;
     }
 
     public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -62,7 +65,7 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
             return null;
 
         var code = _otpGenerator.Generate();
-        var otp = UserOtp.Create(Guid.NewGuid(), email, code, TimeSpan.FromMinutes(10));
+        var otp = UserOtp.Create(Guid.NewGuid(), email, code, TimeSpan.FromMinutes(_otpSettings.ValidForMinutes));
 
         user.RaiseRegistrationRequestedEvent(code);
         await _otpRepository.AddAsync(otp, cancellationToken);
@@ -72,10 +75,12 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
     
     private async Task SendOtpEmailAsync(Email email, UserOtp otp, CancellationToken cancellationToken)
     {
+        var templateData = new { name = "John Doe", code = otp.Code, ValidForMinutes = _otpSettings.ValidForMinutes };
+
         await _emailSender.SendAsync(
             email.ToString(),
-            "Your verification code",
-            $"Your OTP code is: {otp}. It expires in 10 minutes.",
+            "OtpVerificationTemplate",
+            templateData,
             cancellationToken);
     }
 }

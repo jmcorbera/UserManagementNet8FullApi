@@ -6,7 +6,7 @@ namespace UserManagement.Application.Common.Abstractions;
 public interface IEmailSender
 {
     /// <summary>
-    /// Sends an email to the given address with the given subject and body.
+    /// Sends an email to the given address using the specified template and data.
     /// </summary>
-    Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken = default);
+    Task SendAsync<T>(string toEmail, string templateName, T data, CancellationToken cancellationToken = default);
 }

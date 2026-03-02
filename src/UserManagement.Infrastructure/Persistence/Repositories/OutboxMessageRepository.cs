@@ -45,4 +45,16 @@ public sealed class OutboxMessageRepository : IOutboxMessageRepository
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    public async Task<int> DeleteOlderThanAsync(DateTimeOffset cutoff, CancellationToken cancellationToken = default)
+    {
+        var messagesToDelete = await _dbContext.OutboxMessages
+            .Where(o => o.ProcessedAt != null && o.ProcessedAt < cutoff)
+            .ToListAsync(cancellationToken);
+
+        _dbContext.OutboxMessages.RemoveRange(messagesToDelete);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return messagesToDelete.Count;
+    }
 }

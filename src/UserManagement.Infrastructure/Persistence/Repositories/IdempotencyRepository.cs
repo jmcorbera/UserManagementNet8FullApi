@@ -57,6 +57,20 @@ public sealed class IdempotencyRepository : IIdempotencyRepository
         }
     }
 
+    public async Task<int> DeleteExpiredAsync(TimeSpan ttl, CancellationToken cancellationToken = default)
+    {
+        var cutoffDate = DateTimeOffset.UtcNow - ttl;
+        
+        var keysToDelete = await _dbContext.IdempotencyKeys
+            .Where(i => i.CreatedAt < cutoffDate)
+            .ToListAsync(cancellationToken);
+
+        _dbContext.IdempotencyKeys.RemoveRange(keysToDelete);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return keysToDelete.Count;
+    }
+
     private static bool IsUniqueViolation(DbUpdateException ex)
         => ex.InnerException is MySqlConnector.MySqlException mysqlEx && mysqlEx.Number == 1062;
 }

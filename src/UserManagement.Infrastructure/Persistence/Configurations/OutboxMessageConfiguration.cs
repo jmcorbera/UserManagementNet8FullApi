@@ -27,10 +27,19 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
         builder.Property(o => o.Error)
             .HasMaxLength(2000);
 
+        builder.Property(o => o.RetryCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(o => o.NextRetryAt);
+
         builder.HasIndex(o => o.ProcessedAt)
             .HasDatabaseName("IX_OutboxMessages_ProcessedAt");
 
         builder.HasIndex(o => o.OccurredAt)
             .HasDatabaseName("IX_OutboxMessages_OccurredAt");
+
+        builder.HasIndex(o => o.NextRetryAt)
+            .HasDatabaseName("IX_OutboxMessages_NextRetryAt");
     }
 }
